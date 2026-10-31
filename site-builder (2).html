@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Конструктор сайтов</title>
+<style>
+:root{--bg:#f2f3f5;--panel:#fff;--line:#dcdfe4;--text:#1b1f27;--muted:#69707d;--accent:#2f5bea;color-scheme:light dark}
+@media(prefers-color-scheme:dark){:root{--bg:#14161a;--panel:#1c1f25;--line:#30343c;--text:#e8eaee;--muted:#9097a3;--accent:#7b9bff}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{display:grid;grid-template-rows:48px 1fr;font:14px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--text)}
+[hidden]{display:none!important}
+header{display:flex;align-items:center;gap:6px;padding:0 12px;background:var(--panel);border-bottom:1px solid var(--line)}
+header b{margin-right:auto}
+main{display:grid;grid-template-columns:190px 1fr var(--rw,340px);min-height:0}
+aside{background:var(--panel);overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+aside.l{border-right:1px solid var(--line)}
+aside.r{border-left:1px solid var(--line)}
+button,select,input,textarea{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 10px}
+button{cursor:pointer}
+button:hover,:focus-visible{border-color:var(--accent);outline:none}
+button.p{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+textarea{width:100%;font:12px ui-monospace,monospace;resize:vertical}
+h4{margin:10px 0 0;font-size:12px;color:var(--muted);font-weight:600}
+#pal,#list{display:flex;flex-direction:column;gap:6px}
+#list{flex:none;max-height:32vh;overflow:auto}
+#list button,#list input{width:100%;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#cm{position:fixed;z-index:9;min-width:200px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px;box-shadow:0 6px 20px #0004}
+#cm button{display:block;width:100%;text-align:left;border:0;background:none}
+#cm button:hover:not(:disabled){background:var(--bg)}
+#cm button:disabled{opacity:.4;cursor:default}
+#cm hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+#t-chat{overflow:auto}
+.cf{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.cf.col{flex-direction:column;align-items:stretch}
+.cf input[type=range]{flex:1;padding:0}
+.cf input[type=color]{padding:0;width:40px;height:26px}
+.cf output{min-width:34px;text-align:right;color:var(--muted)}
+.stage{position:relative;display:flex;justify-content:center;padding:16px;overflow:auto}
+.stage.busy::before{content:"";position:absolute;left:0;top:0;width:100%;height:3px;z-index:2;background:linear-gradient(90deg,transparent,var(--accent),transparent) no-repeat;background-size:40% 100%;animation:bar 1.2s linear infinite}
+.stage.busy iframe{opacity:.55}
+iframe{transition:opacity .3s}
+.typing{display:flex;align-items:center;gap:4px}
+.typing i{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.35;animation:dot 1.1s infinite ease-in-out}
+.typing i:nth-child(2){animation-delay:.15s}
+.typing i:nth-child(3){animation-delay:.3s}
+.typing span{margin-left:6px;font-size:.85em;opacity:.7}
+@keyframes dot{0%,80%,100%{transform:translateY(0);opacity:.35}40%{transform:translateY(-4px);opacity:1}}
+@keyframes bar{from{background-position:-40% 0}to{background-position:140% 0}}
+@media(prefers-reduced-motion:reduce){.typing i,.stage.busy::before{animation:none}}
+iframe{border:1px solid var(--line);background:#fff;height:100%;width:100%;max-width:100%;border-radius:6px;transition:width .2s}
+.tabs,.row{display:flex;gap:6px}
+.row{flex-wrap:wrap}
+.tabs button{flex:1}
+.tabs .on{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.tab{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0}
+.log{flex:1;min-height:120px;overflow:auto;display:flex;flex-direction:column;gap:var(--gap,6px);padding:var(--gap,6px);border-radius:8px;background:var(--lb,transparent);font:var(--fs,14px)/var(--lh,1.4) var(--font,system-ui,sans-serif)}
+.m{max-width:92%;align-self:flex-start;padding:var(--pad,10px);border-radius:var(--r,8px);background:var(--ab,var(--bg));color:var(--at,inherit);white-space:pre-wrap}
+.m.u{align-self:flex-end;background:var(--ub,var(--accent));color:var(--ut,var(--bg))}
+.log.ul .m.u{align-self:flex-start}
+.s-flat .m,.s-flat .m.u{background:none;color:inherit;border-bottom:1px solid var(--line);border-radius:0;max-width:100%}
+.s-outline .m,.s-outline .m.u{background:none;color:inherit;border:1px solid var(--ub,var(--accent))}
+.m.sys{align-self:center;max-width:100%;background:none;border:0;color:var(--muted);font-size:.85em;text-align:center;padding:0}
+.n{font-size:.8em;opacity:.7;margin-bottom:2px}
+.log:not(.nm) .l,.log:not(.tm) .t,.log:not(.nm):not(.tm) .n{display:none}
+</style>
+</head>
+<body>
+<header>
+  <b>Конструктор сайтов</b>
+  <button data-w="100%">Десктоп</button><button data-w="768px">Планшет</button><button data-w="390px">Телефон</button>
+  <button id="undo" title="Отменить">Отмена</button>
+  <button id="open">Открыть HTML</button>
+  <button class="p" id="export">Экспорт HTML</button>
+  <input type="file" id="file" accept=".html,.htm" hidden>
+</header>
+<main>
+  <aside class="l">
+    <h4>Добавить блок</h4><div id="pal"></div>
+  </aside>
+  <div class="stage"><iframe id="fr" sandbox="allow-same-origin" title="Предпросмотр"></iframe></div>
+  <aside class="r">
+    <h4>Структура: ПКМ — меню, двойной клик — имя</h4><div id="list"></div>
+    <div class="tabs"><button data-t="ai" class="on">Агент</button><button data-t="chat">Чат</button><button data-t="blk">Блок</button><button data-t="css">CSS</button></div>
+    <section class="tab" id="t-ai">
+      <div class="row"><select id="prov"><option value="claude">Claude</option><option value="gemini">Gemini</option><option value="deepseek">DeepSeek</option></select><select id="model" style="flex:1;min-width:0" title="Модель"></select><button id="reload" title="Загрузить актуальный список моделей по API-ключу">Обновить</button></div>
+      <input id="key" type="password" placeholder="API-ключ" autocomplete="off">
+      <div class="log" id="log"></div>
+      <textarea id="msg" rows="3" placeholder="Опишите, что сделать с сайтом. Код сайта уходит агенту с каждым запросом"></textarea>
+      <button class="p" id="send">Отправить агенту</button>
+    </section>
+    <section class="tab" id="t-chat" hidden></section>
+    <section class="tab" id="t-blk" hidden>
+      <div class="row"><button id="up">Вверх</button><button id="dn">Вниз</button><button id="dup">Дублировать</button><button id="del">Удалить</button></div>
+      <textarea id="bh" style="flex:1" placeholder="Выберите блок в предпросмотре. Текст на странице можно править прямо кликом."></textarea>
+    </section>
+    <section class="tab" id="t-css" hidden><textarea id="css" style="flex:1"></textarea></section>
+  </aside>
+</main>
+<div id="cm" hidden></div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+
+/* ---------- Шаблоны блоков и базовый CSS сайта ---------- */
+const T={
+'Шапка':'<header class="nav"><b>Логотип</b><nav><a href="#">Главная</a><a href="#">О нас</a><a href="#">Контакты</a></nav></header>',
+'Hero':'<section class="hero"><h1>Заголовок вашего сайта</h1><p>Коротко о том, что вы предлагаете.</p><a class="btn" href="#">Начать</a></section>',
+'Текст':'<section class="wrap"><h2>О нас</h2><p>Расскажите о себе или о проекте. Кликните по тексту, чтобы изменить его.</p></section>',
+'Преимущества':'<section class="wrap"><h2>Преимущества</h2><div class="grid"><div class="card"><h3>Быстро</h3><p>Описание.</p></div><div class="card"><h3>Просто</h3><p>Описание.</p></div><div class="card"><h3>Надёжно</h3><p>Описание.</p></div></div></section>',
+'Галерея':'<section class="wrap"><h2>Галерея</h2><div class="grid"><div class="ph"></div><div class="ph"></div><div class="ph"></div></div></section>',
+'Призыв':'<section class="cta"><h2>Готовы начать?</h2><a class="btn" href="#">Связаться</a></section>',
+'Форма':'<section class="wrap"><h2>Контакты</h2><form class="form"><input placeholder="Имя"><input placeholder="Email"><textarea placeholder="Сообщение"></textarea><button class="btn">Отправить</button></form></section>',
+'Подвал':'<footer class="foot">© 2026 Ваш сайт</footer>'};
+
+const BASE=`:root{--accent:#2f5bea;--bg:#fff;--text:#1b1f27;--soft:#f3f4f6}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,sans-serif;color:var(--text);background:var(--bg);line-height:1.6}
+.nav{display:flex;justify-content:space-between;align-items:center;padding:16px 32px;border-bottom:1px solid #0001}
+.nav a{margin-left:20px;color:inherit;text-decoration:none}
+.hero{padding:96px 32px;text-align:center;background:var(--accent);color:#fff}
+.hero h1{font-size:clamp(32px,6vw,56px);margin:0 0 12px;line-height:1.1}
+.wrap{max-width:960px;margin:0 auto;padding:56px 24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card{padding:20px;border:1px solid #0002;border-radius:10px}
+.ph{aspect-ratio:4/3;background:var(--soft);border-radius:10px}
+.cta{padding:64px 24px;text-align:center;background:var(--soft)}
+.btn{display:inline-block;padding:12px 24px;background:var(--accent);color:#fff;border:0;border-radius:8px;text-decoration:none;cursor:pointer;font:inherit}
+.hero .btn{background:#fff;color:var(--accent)}
+.form{display:grid;gap:10px;max-width:480px}
+.form input,.form textarea{padding:10px;border:1px solid #0003;border-radius:8px;font:inherit}
+.foot{padding:24px;text-align:center;color:#888}`;
+
+/* ---------- Состояние ---------- */
+let S={css:BASE,blocks:['Шапка','Hero','Текст','Преимущества','Форма','Подвал'].map(k=>T[k])},sel=-1,hist=[];
+try{const s=JSON.parse(localStorage.getItem('sb'));if(s&&s.blocks)S=s}catch(e){}
+const save=()=>{try{localStorage.setItem('sb',JSON.stringify(S))}catch(e){}};
+const push=()=>{hist.push(JSON.stringify(S));if(hist.length>50)hist.shift()};
+$('#undo').onclick=()=>{if(hist.length){S=JSON.parse(hist.pop());sel=-1;render()}};
+
+/* ---------- Сборка страницы ---------- */
+const EDIT='.__b{outline:2px solid transparent;outline-offset:-2px;cursor:text}.__b:hover{outline-color:#2f5bea66}.__b.sel{outline-color:#2f5bea}';
+function doc(edit){
+  return `<!DOCTYPE html>\n<html lang="ru">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>Мой сайт</title>\n<style>\n${S.css}\n[hidden]{display:none!important}\n</style>${edit?`<style>${EDIT}</style>`:''}\n</head>\n<body>\n`+
+  S.blocks.map((b,i)=>edit?`<div class="__b" data-i="${i}" contenteditable spellcheck="false">${b}</div>`:b).join('\n')+`\n</body>\n</html>`;
+}
+function load(html){ // разбор HTML в {css, blocks}
+  const d=new DOMParser().parseFromString(html,'text/html');
+  d.querySelectorAll('script').forEach(s=>s.remove());
+  const css=[...d.querySelectorAll('style')].map(s=>s.textContent).join('\n').trim();
+  const bl=[...d.body.children].filter(e=>e.tagName!=='STYLE').map(e=>e.outerHTML);
+  if(!bl.length)throw new Error('В HTML не найдено блоков');
+  S.css=css||S.css;S.blocks=bl;
+}
+function render(){
+  const fr=$('#fr'),y=fr.contentDocument?.documentElement.scrollTop||0;
+  fr.onload=()=>{
+    const d=fr.contentDocument;d.documentElement.scrollTop=y;
+    d.querySelectorAll('.__b').forEach(el=>{
+      const i=+el.dataset.i;
+      el.onclick=()=>pick(i);
+      el.oninput=()=>{S.blocks[i]=el.innerHTML;save();if(sel===i)$('#bh').value=S.blocks[i]};
+    });
+    pick(sel<S.blocks.length?sel:-1);
+  };
+  fr.srcdoc=doc(true);$('#css').value=S.css;save();
+}
+function pick(i){
+  sel=i;
+  $('#fr').contentDocument?.querySelectorAll('.__b').forEach(e=>e.classList.toggle('sel',+e.dataset.i===i));
+  $('#bh').value=S.blocks[i]??'';
+  const ri=$('#list input');if(ri)ri.onblur=null;
+  $('#list').innerHTML='';
+  S.blocks.forEach((b,n)=>{
+    const t=document.createElement('button');
+    const nm=getAttr(n,'data-name')||b.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,24)||'Блок';
+    t.textContent=(n+1)+'. '+nm+(getAttr(n,'hidden')!==null?' (скрыт)':'');
+    if(n===i)t.className='p';
+    t.onclick=()=>{pick(n);$('#fr').contentDocument.querySelector(`[data-i="${n}"]`)?.scrollIntoView({behavior:'smooth'})};
+    t.ondblclick=()=>ren(n);t.oncontextmenu=e=>menu(e,n);
+    $('#list').append(t);
+  });
+}
+
+/* ---------- Имена блоков и контекстное меню структуры ---------- */
+function blk(i){const t=document.createElement('template');t.innerHTML=S.blocks[i].trim();return t.content.firstElementChild}
+const getAttr=(i,a)=>blk(i)?.getAttribute(a)??null;
+function setAttr(i,a,v){const e=blk(i);if(!e)return;v===null?e.removeAttribute(a):e.setAttribute(a,v);S.blocks[i]=e.outerHTML}
+function to(k){if(sel<0)return;push();const [b]=S.blocks.splice(sel,1);S.blocks.splice(k,0,b);sel=k;render()}
+function ren(i){ // prompt() не работает в Electron, поэтому переименование прямо в списке
+  const old=$('#list').children[i];if(!old)return;
+  const inp=document.createElement('input');inp.value=getAttr(i,'data-name')||'';inp.placeholder='Название блока';
+  inp.onkeydown=e=>{
+    if(e.key==='Enter'){inp.onblur=null;push();setAttr(i,'data-name',inp.value.trim()||null);render()}
+    if(e.key==='Escape')pick(sel);
+  };
+  inp.onblur=()=>pick(sel);
+  old.replaceWith(inp);inp.focus();inp.select();
+}
+function menu(e,i){
+  e.preventDefault();pick(i);
+  const n=S.blocks.length,hid=getAttr(i,'hidden')!==null,cm=$('#cm');
+  const A=[
+    ['Переименовать',()=>ren(i)],
+    ['Дублировать',()=>{push();S.blocks.splice(i+1,0,S.blocks[i]);sel=i+1;render()}],
+    null,
+    ['Выше',()=>mv(-1),i<1],['Ниже',()=>mv(1),i>n-2],['В начало',()=>to(0),i<1],['В конец',()=>to(n-1),i>n-2],
+    null,
+    [hid?'Показать на странице':'Скрыть на странице',()=>{push();setAttr(i,'hidden',hid?null:'');render()}],
+    ['Копировать HTML',()=>navigator.clipboard?.writeText(S.blocks[i])],
+    null,
+    ['Удалить',()=>{push();S.blocks.splice(i,1);sel=-1;render()}]
+  ];
+  cm.innerHTML='';
+  A.forEach(a=>{
+    if(!a){cm.append(document.createElement('hr'));return}
+    const b=document.createElement('button');b.textContent=a[0];b.disabled=!!a[2];
+    b.onclick=()=>{cm.hidden=true;a[1]()};cm.append(b);
+  });
+  cm.hidden=false;
+  cm.style.left=Math.max(0,Math.min(e.clientX,innerWidth-cm.offsetWidth-8))+'px';
+  cm.style.top=Math.max(0,Math.min(e.clientY,innerHeight-cm.offsetHeight-8))+'px';
+}
+document.addEventListener('click',()=>$('#cm').hidden=true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#cm').hidden=true});
+
+/* ---------- Панели и действия над блоками ---------- */
+Object.keys(T).forEach(k=>{
+  const b=document.createElement('button');b.textContent='+ '+k;
+  b.onclick=()=>{push();const at=sel<0?S.blocks.length:sel+1;S.blocks.splice(at,0,T[k]);sel=at;render()};
+  $('#pal').append(b);
+});
+$$('[data-w]').forEach(b=>b.onclick=()=>$('#fr').style.width=b.dataset.w);
+$$('[data-t]').forEach(b=>b.onclick=()=>{
+  $$('[data-t]').forEach(x=>x.classList.toggle('on',x===b));
+  $$('.tab').forEach(s=>s.hidden=s.id!=='t-'+b.dataset.t);
+});
+function mv(d){const j=sel+d;if(sel<0||j<0||j>=S.blocks.length)return;push();[S.blocks[sel],S.blocks[j]]=[S.blocks[j],S.blocks[sel]];sel=j;render()}
+$('#up').onclick=()=>mv(-1);$('#dn').onclick=()=>mv(1);
+$('#dup').onclick=()=>{if(sel<0)return;push();S.blocks.splice(sel+1,0,S.blocks[sel]);sel++;render()};
+$('#del').onclick=()=>{if(sel<0)return;push();S.blocks.splice(sel,1);sel=-1;render()};
+$('#bh').onchange=()=>{if(sel<0)return;push();S.blocks[sel]=$('#bh').value;render()};
+$('#css').onchange=()=>{push();S.css=$('#css').value;render()};
+
+/* ---------- Экспорт / импорт ---------- */
+$('#export').onclick=()=>{ // В Electron замените на dialog.showSaveDialog через IPC
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([doc(false)],{type:'text/html'}));
+  a.download='index.html';a.click();
+};
+$('#open').onclick=()=>$('#file').click();
+$('#file').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  const old=JSON.stringify(S);
+  try{load(await f.text());hist.push(old);sel=-1;render()}catch(err){say('Ошибка: '+err.message)}
+  e.target.value='';
+};
+
+/* ---------- ИИ-агент: Claude, Gemini, DeepSeek ---------- */
+const P={
+  claude:{models:['claude-sonnet-5-5','claude-opus-5-5','claude-haiku-5-5','claude-fable-5-1'],
+    list:k=>({url:'https://api.anthropic.com/v1/models?limit=100',h:{'x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},parse:d=>d.data.map(x=>x.id)}),
+    url:()=>'https://api.anthropic.com/v1/messages',
+    req:(k,m,sys,u,o)=>({h:{'x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      b:{model:m,max_tokens:o.max,...o.t,system:sys,messages:[{role:'user',content:u}]}}),
+    out:d=>d.content.map(c=>c.text||'').join('')},
+  gemini:{models:['gemini-3.6-flash','gemini-3.5-flash-lite'],
+    list:k=>({url:'https://generativelanguage.googleapis.com/v1beta/models?pageSize=200',h:{'x-goog-api-key':k},
+      parse:d=>d.models.filter(x=>(x.supportedGenerationMethods||[]).includes('generateContent')).map(x=>x.name.replace('models/',''))}),
+    url:m=>`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`,
+    req:(k,m,sys,u,o)=>({h:{'x-goog-api-key':k},
+      b:{systemInstruction:{parts:[{text:sys}]},contents:[{role:'user',parts:[{text:u}]}],generationConfig:{maxOutputTokens:o.max,...o.t}}}),
+    out:d=>d.candidates[0].content.parts.map(p=>p.text||'').join('')},
+  deepseek:{models:['deepseek-chat','deepseek-reasoner'],
+    list:k=>({url:'https://api.deepseek.com/models',h:{Authorization:'Bearer '+k},parse:d=>d.data.map(x=>x.id)}),
+    url:()=>'https://api.deepseek.com/chat/completions',
+    req:(k,m,sys,u,o)=>({h:{Authorization:'Bearer '+k},
+      b:{model:m,max_tokens:o.max,...o.t,messages:[{role:'system',content:sys},{role:'user',content:u}]}}),
+    out:d=>d.choices[0].message.content}
+};
+const SYS='Ты — агент конструктора сайтов. Тебе дают текущую страницу и просьбу пользователя. Верни ПОЛНУЮ обновлённую страницу: один тег <style> с общим CSS, затем HTML-секции, у каждой один корневой элемент верхнего уровня (header, section, footer и т. п.). Без <script> и внешних файлов; картинки только через CSS или inline SVG. Вёрстка адаптивная, цвета через CSS-переменные. Ответ — только HTML-код, без пояснений и markdown. Язык текстов на сайте — как у пользователя.';
+
+let K={p:'claude',k:{},m:{},l:{}};
+try{K=Object.assign(K,JSON.parse(localStorage.getItem('sbk')))}catch(e){}
+const sk=()=>{try{localStorage.setItem('sbk',JSON.stringify(K))}catch(e){}};
+function loadP(){
+  $('#prov').value=K.p;
+  const L=K.l[K.p]||P[K.p].models,cur=L.includes(K.m[K.p])?K.m[K.p]:L[0],s=$('#model');
+  s.innerHTML='';L.forEach(x=>s.add(new Option(x,x)));
+  s.value=K.m[K.p]=cur;$('#key').value=K.k[K.p]||'';
+}
+$('#prov').onchange=()=>{K.p=$('#prov').value;sk();loadP()};
+$('#model').onchange=()=>{K.m[K.p]=$('#model').value;sk()};
+$('#key').oninput=()=>{K.k[K.p]=$('#key').value;sk()};
+$('#key').onchange=()=>{if($('#key').value&&!K.l[K.p])$('#reload').onclick()};
+$('#reload').onclick=async()=>{
+  const key=K.k[K.p];if(!key){say('Введите API-ключ, чтобы загрузить список моделей.',2);return}
+  try{
+    const r=P[K.p].list(key),res=await fetch(r.url,{headers:r.h}),d=await res.json();
+    if(!res.ok)throw new Error(String(d.error?.message||res.status));
+    const L=r.parse(d);if(!L.length)throw new Error('Список моделей пуст');
+    K.l[K.p]=L;sk();loadP();say('Список моделей обновлён: '+L.length,2);
+  }catch(e){say('Ошибка: '+e.message)}
+};
+
+/* ---------- Настройки чата ---------- */
+const D={preset:'auto',ub:'#2f5bea',ut:'#ffffff',ab:'#eef0f3',at:'#1b1f27',lb:'#ffffff',font:'system-ui,sans-serif',fs:14,lh:1.4,style:'bubble',ua:'right',r:8,pad:10,gap:6,names:true,time:false,scroll:true,rw:340,rows:3,send:'ctrl',temp:0.7,max:8000,sys:SYS};
+const PR={auto:{},
+  light:{ub:'#2f5bea',ut:'#ffffff',ab:'#eef0f3',at:'#1b1f27',lb:'#ffffff'},
+  dark:{ub:'#4c6fff',ut:'#ffffff',ab:'#262a33',at:'#e8eaee',lb:'#14161a'},
+  paper:{ub:'#6b4f2a',ut:'#fffaf0',ab:'#f4ecd8',at:'#3a2f1b',lb:'#fbf6ea',font:'Georgia,serif'},
+  term:{ub:'#14532d',ut:'#d1fae5',ab:'#0a0f0c',at:'#86efac',lb:'#050806',font:'ui-monospace,monospace'}};
+const CF=[
+  ['Тема и цвета'],
+  ['preset','Пресет','sel',[['auto','Как в приложении'],['light','Светлый'],['dark','Тёмный'],['paper','Бумага'],['term','Терминал']]],
+  ['ub','Фон ваших сообщений','color'],['ut','Текст ваших сообщений','color'],['ab','Фон ответов агента','color'],['at','Текст ответов агента','color'],['lb','Фон чата','color'],
+  ['Текст'],
+  ['font','Шрифт','sel',[['system-ui,sans-serif','Системный'],['Georgia,serif','С засечками'],['ui-monospace,monospace','Моноширинный'],['"Trebuchet MS",sans-serif','Округлый']]],
+  ['fs','Размер шрифта','range',11,22,1],['lh','Межстрочный интервал','range',1.1,2,0.05],
+  ['Сообщения'],
+  ['style','Стиль','sel',[['bubble','Пузыри'],['flat','Без фона'],['outline','Контур']]],
+  ['ua','Ваши сообщения','sel',[['right','Справа'],['left','Слева']]],
+  ['r','Скругление','range',0,24,1],['pad','Внутренний отступ','range',2,20,1],['gap','Расстояние между сообщениями','range',0,24,1],
+  ['names','Подписи «Вы» и «Агент»','check'],['time','Время сообщений','check'],['scroll','Автопрокрутка','check'],
+  ['Панель и ввод'],
+  ['rw','Ширина правой панели','range',280,720,10],['rows','Высота поля ввода (строк)','range',1,10,1],
+  ['send','Отправка','sel',[['ctrl','Ctrl+Enter'],['enter','Enter (Shift+Enter — перенос)']]],
+  ['Поведение агента'],
+  ['temp','Температура (по умолчанию не отправляется; Gemini 3.5+ её не принимает)','range',0,1,0.05],
+  ['max','Макс. длина ответа (лимит зависит от модели)','range',1000,16000,500],
+  ['sys','Системный промпт','area']
+];
+let Z={};
+try{Z=JSON.parse(localStorage.getItem('sbz'))||{}}catch(e){}
+const zv=k=>Z[k]??D[k],zs=()=>{try{localStorage.setItem('sbz',JSON.stringify(Z))}catch(e){}};
+function capply(){
+  const r=document.documentElement.style;
+  ['ub','ut','ab','at','lb'].forEach(k=>Z[k]?r.setProperty('--'+k,Z[k]):r.removeProperty('--'+k));
+  r.setProperty('--font',zv('font'));r.setProperty('--fs',zv('fs')+'px');r.setProperty('--lh',zv('lh'));
+  r.setProperty('--r',zv('r')+'px');r.setProperty('--pad',zv('pad')+'px');r.setProperty('--gap',zv('gap')+'px');r.setProperty('--rw',zv('rw')+'px');
+  $('#log').className='log s-'+zv('style')+(zv('ua')==='left'?' ul':'')+(zv('names')?' nm':'')+(zv('time')?' tm':'');
+  $('#msg').rows=zv('rows');
+}
+function cfUI(){
+  const box=$('#t-chat');box.innerHTML='';
+  CF.forEach(c=>{
+    if(c.length===1){const h=document.createElement('h4');h.textContent=c[0];box.append(h);return}
+    const [k,l,t,a,b,st]=c,lab=document.createElement('label'),o=document.createElement('output');
+    lab.className='cf'+(t==='area'?' col':'');
+    let el;
+    if(t==='sel'){el=document.createElement('select');a.forEach(([x,y])=>el.add(new Option(y,x)))}
+    else if(t==='area'){el=document.createElement('textarea');el.rows=8}
+    else{el=document.createElement('input');el.type=t==='check'?'checkbox':t;if(t==='range'){el.min=a;el.max=b;el.step=st}}
+    t==='check'?el.checked=zv(k):el.value=zv(k);
+    o.textContent=t==='range'?zv(k):'';
+    el.oninput=el.onchange=()=>{
+      Z[k]=t==='check'?el.checked:t==='range'?+el.value:el.value;
+      if(k==='preset'){['ub','ut','ab','at','lb','font'].forEach(x=>delete Z[x]);Object.assign(Z,PR[el.value])}
+      o.textContent=t==='range'?Z[k]:'';zs();capply();if(k==='preset')cfUI();
+    };
+    lab.append(l,el,o);box.append(lab);
+  });
+  const rb=document.createElement('button');rb.textContent='Сбросить настройки чата';
+  rb.onclick=()=>{Z={};zs();capply();cfUI()};box.append(rb);
+}
+
+/* ---------- Чат ---------- */
+function say(t,r){ // r: 1 — вы, 2 — служебная заметка, иначе агент
+  const m=document.createElement('div'),L=$('#log');
+  m.className='m'+(r===1?' u':r===2?' sys':'');
+  if(r!==2){
+    const n=document.createElement('div');n.className='n';
+    n.innerHTML='<span class="l">'+(r===1?'Вы':'Агент')+'</span><span class="t"> '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</span>';
+    m.append(n);
+  }
+  const b=document.createElement('div');b.textContent=t;m.append(b);L.append(m);
+  if(zv('scroll'))L.scrollTop=L.scrollHeight;
+}
+function typing(on){ // анимация генерации: точки с таймером в чате + полоса над предпросмотром
+  const L=$('#log'),old=$('#ty');
+  if(old){clearInterval(old._t);old.remove()}
+  $('.stage').classList.toggle('busy',!!on);
+  $('#send').textContent=on?'Генерация…':'Отправить агенту';
+  if(!on)return;
+  const m=document.createElement('div'),t0=Date.now();
+  m.id='ty';m.className='m typing';m.innerHTML='<i></i><i></i><i></i><span>0 с</span>';
+  const sp=m.lastChild;
+  m._t=setInterval(()=>sp.textContent=Math.floor((Date.now()-t0)/1000)+' с',500);
+  L.append(m);if(zv('scroll'))L.scrollTop=L.scrollHeight;
+}
+async function ask(){
+  const t=$('#msg').value.trim();if(!t)return;
+  const p=P[K.p],key=K.k[K.p],model=$('#model').value;
+  if(!key){say('Введите API-ключ на вкладке «Агент».',2);return}
+  say(t,1);$('#msg').value='';$('#send').disabled=true;
+  try{
+    const code=doc(false),nm=sel>=0?getAttr(sel,'data-name'):null; // код сайта отправляется ВСЕГДА
+    const u=`Текущий код сайта:\n${code}\n\nЗадача: ${t}`+(sel>=0?`\nСейчас выбран блок №${sel+1}${nm?` («${nm}»)`:''}; если задача его касается, меняй в основном его.`:'');
+    say(`Код сайта отправлен вместе с запросом (${code.length} симв.)`,2);typing(1);
+    const r=p.req(key,model,zv('sys'),u,{max:zv('max'),t:Z.temp==null||(K.p==='gemini'&&/gemini-(3\.([5-9]|\d\d)|[4-9])/.test(model))?{}:{temperature:Z.temp}});
+    const res=await fetch(p.url(model),{method:'POST',headers:{'Content-Type':'application/json',...r.h},body:JSON.stringify(r.b)});
+    const d=await res.json();
+    if(!res.ok)throw new Error(String(d.error?.message||res.status));
+    const html=p.out(d).replace(/^\s*```(?:html)?\s*|\s*```\s*$/g,'');
+    typing(0);const old=JSON.stringify(S);
+    load(html);hist.push(old);sel=-1;render();
+    say('Готово, страница обновлена. Вернуть прежнюю версию — кнопка «Отмена».');
+  }catch(e){typing(0);say('Ошибка: '+e.message+(/model/i.test(e.message)?'\nНажмите «Обновить» рядом со списком моделей и выберите актуальную модель.':''))}
+  typing(0);$('#send').disabled=false;
+}
+$('#send').onclick=ask;
+$('#msg').onkeydown=e=>{
+  const en=zv('send')==='enter';
+  if(e.key==='Enter'&&(en?!e.shiftKey:(e.ctrlKey||e.metaKey))){e.preventDefault();ask()}
+};
+
+cfUI();capply();loadP();render();
+say('Опишите сайт или что изменить — я пересоберу страницу. Выберите блок в структуре справа, чтобы сузить задачу.');
+</script>
+</body>
+</html>
